@@ -1,0 +1,2546 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حضور موردين العمالة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #1abc9c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --bg-color: #f8f9fa;
+            --sidebar-width: 250px;
+            --header-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* تصميم صفحة تسجيل الدخول */
+        .login-container {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-50px, -50px) rotate(360deg); }
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 420px;
+            max-width: 90%;
+            z-index: 1;
+            position: relative;
+            animation: fadeIn 1s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #764ba2;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .login-subtitle {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: #f8f9fa;
+        }
+
+        .form-control:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
+            outline: none;
+            background-color: white;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* التطبيق الرئيسي */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        }
+
+        /* الشريط الجانبي */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h3 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 18px 25px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            margin: 5px 10px;
+            border-radius: 8px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left-color: #f39c12;
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left-color: #1abc9c;
+        }
+
+        .menu-item i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            transition: all 0.3s;
+        }
+
+        .header {
+            height: var(--header-height);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-left: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #764ba2;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-left: 15px;
+            color: #667eea;
+        }
+
+        /* الصفحات */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* الكروت */
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #764ba2;
+            font-weight: 600;
+        }
+
+        /* الجداول */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #555;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* الأزرار */
+        .btn-sm {
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+        }
+
+        .btn-light {
+            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+            color: #2c3e50;
+        }
+
+        /* الفلاتر */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+        }
+
+        /* الإحصائيات */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-size: 28px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-info h3 {
+            font-size: 32px;
+            margin-bottom: 5px;
+            color: #764ba2;
+        }
+
+        .stat-info p {
+            color: #777;
+            font-size: 14px;
+        }
+
+        /* QR Codes */
+        .qr-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .qr-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 180px;
+            transition: all 0.3s;
+        }
+
+        .qr-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .qr-code {
+            margin: 10px auto;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .qr-name {
+            margin-top: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* نماذج */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            color: #764ba2;
+        }
+
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+            transition: all 0.3s;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+            transform: rotate(90deg);
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+
+        .form-col {
+            flex: 1;
+            padding: 0 10px;
+            min-width: 200px;
+        }
+
+        /* عرض البطاقات */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .employee-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .employee-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #764ba2;
+        }
+
+        .employee-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        /* الإشعارات */
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.2) 100%);
+            color: #27ae60;
+            border: 1px solid #2ecc71;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(230, 126, 34, 0.2) 100%);
+            color: #d35400;
+            border: 1px solid #f39c12;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%);
+            color: #c0392b;
+            border: 1px solid #e74c3c;
+        }
+
+        /* تحسينات للطباعة */
+        @media print {
+            .sidebar, .header, .filters, .btn {
+                display: none !important;
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+
+        /* تحسينات للجوال */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .sidebar-header h3, .menu-item span {
+                display: none;
+            }
+            .main-content {
+                margin-right: 70px;
+            }
+            .menu-item {
+                justify-content: center;
+                padding: 15px;
+            }
+            .menu-item i {
+                margin-left: 0;
+            }
+            .filters {
+                flex-direction: column;
+            }
+            .filter-group {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- صفحة تسجيل الدخول -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1 class="login-title">نظام حضور موردين العمالة</h1>
+            <div class="form-group">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" id="username" class="form-control" value="admin">
+            </div>
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" class="form-control" value="admin123">
+            </div>
+            <button class="btn btn-block" onclick="login()">تسجيل الدخول</button>
+            <div class="login-subtitle">
+                تم التطوير بواسطة وليد طارق
+            </div>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- الشريط الجانبي -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>نظام الحضور</h3>
+                <p>موردين العمالة</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" onclick="showPage('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </div>
+                <div class="menu-item" onclick="showPage('employees')">
+                    <i class="fas fa-users"></i>
+                    <span>الموظفين</span>
+                </div>
+                <div class="menu-item" onclick="showPage('attendance')">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>تسجيل الحضور</span>
+                </div>
+                <div class="menu-item" onclick="showPage('qrAttendance')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR Code</span>
+                </div>
+                <div class="menu-item" onclick="showPage('attendanceReport')">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>إجمالي الحضور</span>
+                </div>
+                <div class="menu-item" onclick="showPage('reports')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>التقارير</span>
+                </div>
+                <div class="menu-item" id="usersMenuItem" onclick="showPage('users')">
+                    <i class="fas fa-user-cog"></i>
+                    <span>المستخدمين</span>
+                </div>
+                <div class="menu-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل الخروج</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span id="pageTitle">لوحة التحكم</span>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">و</div>
+                    <div>
+                        <div id="userGreeting">مرحباً، وليد</div>
+                        <div id="userRole" style="font-size: 12px; color: #777;">مسئول</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- صفحة لوحة التحكم -->
+                <div id="dashboard" class="page active">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.2) 100%); color: #3498db;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalEmployees">0</h3>
+                                <p>إجمالي الموظفين</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.2) 100%); color: #2ecc71;">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="presentToday">0</h3>
+                                <p>حضروا اليوم</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%); color: #e74c3c;">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="absentToday">0</h3>
+                                <p>غائبين اليوم</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(155, 89, 182, 0.2) 0%, rgba(142, 68, 173, 0.2) 100%); color: #9b59b6;">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="activeLocations">0</h3>
+                                <p>المواقع النشطة</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">آخر النشاطات</h2>
+                        </div>
+                        <div class="table-container">
+                            <table id="recentActivities">
+                                <thead>
+                                    <tr>
+                                        <th>الموظف</th>
+                                        <th>النشاط</th>
+                                        <th>الوقت</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentActivitiesBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة الموظفين -->
+                <div id="employees" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">إدارة الموظفين</h2>
+                            <div>
+                                <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+                                <button class="btn btn-light btn-sm" onclick="document.getElementById('excelFile').click()">
+                                    <i class="fas fa-download"></i> استيراد Excel
+                                </button>
+                                <button class="btn btn-success btn-sm" style="margin-right: 10px;" onclick="showAddEmployeeModal()">
+                                    <i class="fas fa-plus"></i> إضافة موظف
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>البحث</label>
+                                <input type="text" class="form-control" id="employeeSearch" placeholder="ابحث بالاسم" onkeyup="filterEmployees()">
+                            </div>
+                            <div class="filter-group">
+                                <label>الموقع</label>
+                                <select class="form-control" id="locationFilter" onchange="filterEmployees()">
+                                    <option value="">جميع المواقع</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-info btn-sm" onclick="exportEmployeesToExcel()">
+                                    <i class="fas fa-download"></i> تصدير Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="employeesTable">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الرقم القومي</th>
+                                        <th>المهنة</th>
+                                        <th>الشفت</th>
+                                        <th>الموقع</th>
+                                        <th>الشركة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeesTableBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة تسجيل الحضور -->
+                <div id="attendance" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">تسجيل الحضور</h2>
+                            <div>
+                                <button class="btn btn-info btn-sm" onclick="showAllAttendance()">
+                                    <i class="fas fa-eye"></i> عرض الكل
+                                </button>
+                                <select class="form-control" style="display: inline-block; width: auto; margin-right: 10px;" id="viewMode" onchange="changeAttendanceView()">
+                                    <option value="table">عرض جدولي</option>
+                                    <option value="cards">عرض بطاقات</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning" id="duplicateAlert" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="alertMessage" style="margin-right: 10px;"></span>
+                            <button class="btn btn-warning btn-sm" onclick="confirmAttendance()">موافق</button>
+                            <button class="btn btn-light btn-sm" style="margin-right: 10px;" onclick="cancelAttendance()">إلغاء</button>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>التاريخ</label>
+                                <input type="date" class="form-control" id="attendanceDate">
+                            </div>
+                            <div class="filter-group">
+                                <label>الموقع</label>
+                                <select class="form-control" id="attendanceLocation" onchange="filterAttendanceEmployees()">
+                                    <option value="">جميع المواقع</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-info btn-sm" onclick="exportAttendanceToExcel()">
+                                    <i class="fas fa-download"></i> تصدير Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- العرض الجدولي -->
+                        <div id="tableView" class="table-container">
+                            <table id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الرقم القومي</th>
+                                        <th>المهنة</th>
+                                        <th>الموقع</th>
+                                        <th>الحضور</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTableBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- عرض البطاقات -->
+                        <div id="cardsView" class="cards-grid" style="display: none;">
+                            <!-- سيتم ملؤها بالبيانات -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة QR Code -->
+                <div id="qrAttendance" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">QR Code للموظفين</h2>
+                            <button class="btn btn-info btn-sm" onclick="generateAllQRCodes()">
+                                <i class="fas fa-sync-alt"></i> إنشاء جميع QR Codes
+                            </button>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>البحث</label>
+                                <input type="text" class="form-control" id="qrSearch" placeholder="ابحث بالاسم" onkeyup="filterQRCodes()">
+                            </div>
+                            <div class="filter-group">
+                                <label>الموقع</label>
+                                <select class="form-control" id="qrLocation" onchange="filterQRCodes()">
+                                    <option value="">جميع المواقع</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-success btn-sm" onclick="printQRCodes()">
+                                    <i class="fas fa-print"></i> طباعة QR Codes
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="qr-section" id="qrContainer">
+                            <!-- QR Codes ستظهر هنا -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة إجمالي الحضور -->
+                <div id="attendanceReport" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">إجمالي الحضور</h2>
+                            <button class="btn btn-light btn-sm" onclick="exportAttendanceReportToExcel()">
+                                <i class="fas fa-download"></i> تصدير Excel
+                            </button>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>من تاريخ</label>
+                                <input type="date" class="form-control" id="fromDate">
+                            </div>
+                            <div class="filter-group">
+                                <label>إلى تاريخ</label>
+                                <input type="date" class="form-control" id="toDate">
+                            </div>
+                            <div class="filter-group">
+                                <label>الموقع</label>
+                                <select class="form-control" id="reportLocation" onchange="filterAttendanceReport()">
+                                    <option value="">جميع المواقع</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-info btn-sm" onclick="filterAttendanceReport()">تصفية</button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="attendanceReportTable">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الرقم القومي</th>
+                                        <th>إجمالي أيام العمل</th>
+                                        <th>أيام الحضور</th>
+                                        <th>أيام الغياب</th>
+                                        <th>نسبة الحضور</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceReportTableBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة التقارير -->
+                <div id="reports" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">تقارير الحضور</h2>
+                            <button class="btn btn-light btn-sm" onclick="exportReportsToExcel()">
+                                <i class="fas fa-download"></i> تصدير Excel
+                            </button>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>السنة</label>
+                                <select class="form-control" id="reportYear" onchange="filterReports()">
+                                    <!-- السنوات ستضاف هنا -->
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>الشهر</label>
+                                <select class="form-control" id="reportMonth" onchange="filterReports()">
+                                    <option value="0">جميع الأشهر</option>
+                                    <option value="1">يناير</option>
+                                    <option value="2">فبراير</option>
+                                    <option value="3">مارس</option>
+                                    <option value="4">أبريل</option>
+                                    <option value="5">مايو</option>
+                                    <option value="6">يونيو</option>
+                                    <option value="7">يوليو</option>
+                                    <option value="8">أغسطس</option>
+                                    <option value="9">سبتمبر</option>
+                                    <option value="10">أكتوبر</option>
+                                    <option value="11">نوفمبر</option>
+                                    <option value="12">ديسمبر</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>الموقع</label>
+                                <select class="form-control" id="reportLocation2" onchange="filterReports()">
+                                    <option value="">جميع المواقع</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-info btn-sm" onclick="filterReports()">تصفية</button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="reportsTable">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>إجمالي أيام العمل</th>
+                                        <th>تفاصيل الحضور</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صفحة المستخدمين -->
+                <div id="users" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">إدارة المستخدمين</h2>
+                            <button class="btn btn-success btn-sm" onclick="showAddUserModal()">
+                                <i class="fas fa-plus"></i> إضافة مستخدم
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>اسم المستخدم</th>
+                                        <th>الاسم</th>
+                                        <th>الدور</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- سيتم ملؤها بالبيانات -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة موظف -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">إضافة موظف جديد</h3>
+                <span class="close" onclick="closeModal('addEmployeeModal')">&times;</span>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الاسم</label>
+                        <input type="text" class="form-control" id="employeeName">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الرقم القومي</label>
+                        <input type="text" class="form-control" id="nationalId">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>المهنة</label>
+                        <input type="text" class="form-control" id="employeeJob">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الشفت</label>
+                        <select class="form-control" id="employeeShift">
+                            <option value="صباحي">صباحي</option>
+                            <option value="مسائي">مسائي</option>
+                            <option value="ليلي">ليلي</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <input type="text" class="form-control" id="employeeLocation">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الشركة</label>
+                        <input type="text" class="form-control" id="employeeCompany">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success btn-block" onclick="saveEmployee()">حفظ الموظف</button>
+        </div>
+    </div>
+
+    <!-- نموذج تعديل موظف -->
+    <div id="editEmployeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">تعديل بيانات الموظف</h3>
+                <span class="close" onclick="closeModal('editEmployeeModal')">&times;</span>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الاسم</label>
+                        <input type="text" class="form-control" id="editEmployeeName">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الرقم القومي</label>
+                        <input type="text" class="form-control" id="editNationalId" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>المهنة</label>
+                        <input type="text" class="form-control" id="editEmployeeJob">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الشفت</label>
+                        <select class="form-control" id="editEmployeeShift">
+                            <option value="صباحي">صباحي</option>
+                            <option value="مسائي">مسائي</option>
+                            <option value="ليلي">ليلي</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <input type="text" class="form-control" id="editEmployeeLocation">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الشركة</label>
+                        <input type="text" class="form-control" id="editEmployeeCompany">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success btn-block" onclick="updateEmployee()">تحديث البيانات</button>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة مستخدم -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">إضافة مستخدم جديد</h3>
+                <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>اسم المستخدم</label>
+                        <input type="text" class="form-control" id="newUsername">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>كلمة المرور</label>
+                        <input type="password" class="form-control" id="newPassword">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الاسم</label>
+                        <input type="text" class="form-control" id="newName">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الدور</label>
+                        <select class="form-control" id="newRole">
+                            <option value="مسئول">مسئول</option>
+                            <option value="مشرف">مشرف</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success btn-block" onclick="saveUser()">حفظ المستخدم</button>
+        </div>
+    </div>
+
+    <!-- نموذج تعديل مستخدم -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">تعديل بيانات المستخدم</h3>
+                <span class="close" onclick="closeModal('editUserModal')">&times;</span>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>اسم المستخدم</label>
+                        <input type="text" class="form-control" id="editUsername" readonly>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>كلمة المرور</label>
+                        <input type="password" class="form-control" id="editPassword">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الاسم</label>
+                        <input type="text" class="form-control" id="editName">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label>الدور</label>
+                        <select class="form-control" id="editRole">
+                            <option value="مسئول">مسئول</option>
+                            <option value="مشرف">مشرف</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success btn-block" onclick="updateUser()">تحديث البيانات</button>
+        </div>
+    </div>
+
+    <!-- نموذج عرض جميع سجلات الحضور -->
+    <div id="allAttendanceModal" class="modal">
+        <div class="modal-content" style="max-width: 90%;">
+            <div class="modal-header">
+                <h3 class="modal-title">جميع سجلات الحضور</h3>
+                <span class="close" onclick="closeModal('allAttendanceModal')">&times;</span>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>من تاريخ</label>
+                    <input type="date" class="form-control" id="allAttendanceFromDate">
+                </div>
+                <div class="filter-group">
+                    <label>إلى تاريخ</label>
+                    <input type="date" class="form-control" id="allAttendanceToDate">
+                </div>
+                <div class="filter-group">
+                    <label>الموقع</label>
+                    <select class="form-control" id="allAttendanceLocation">
+                        <option value="">جميع المواقع</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-info btn-sm" onclick="filterAllAttendance()">تصفية</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="allAttendanceTable">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الموقع</th>
+                            <th>التاريخ</th>
+                            <th>الوقت</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allAttendanceTableBody">
+                        <!-- سيتم ملؤها بالبيانات -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // بيانات التطبيق
+        let appData = {
+            currentUser: null,
+            employees: [],
+            attendance: [],
+            users: [
+                { username: "admin", password: "admin123", name: "وليد طارق", role: "مسئول", created: "2024-01-01" },
+                { username: "supervisor", password: "super123", name: "أحمد محمد", role: "مشرف", created: "2024-01-02" }
+            ],
+            currentAttendance: {
+                employeeId: null,
+                employeeName: null,
+                location: null
+            },
+            currentEditEmployeeId: null,
+            currentEditUsername: null
+        };
+
+        // تهيئة التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            // تحميل البيانات من التخزين المحلي
+            loadDataFromStorage();
+            
+            // تعيين التاريخ الحالي
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+            
+            // تعيين تواريخ التقارير
+            const firstDayOfMonth = new Date();
+            firstDayOfMonth.setDate(1);
+            document.getElementById('fromDate').value = firstDayOfMonth.toISOString().split('T')[0];
+            document.getElementById('toDate').value = today;
+            
+            // تعيين تواريخ عرض الكل
+            const firstDayOfYear = new Date(new Date().getFullYear(), 0, 1);
+            document.getElementById('allAttendanceFromDate').value = firstDayOfYear.toISOString().split('T')[0];
+            document.getElementById('allAttendanceToDate').value = today;
+            
+            // ملء سنوات التقارير - هذا هو الحل للمشكلة
+            fillReportYears();
+            
+            // إعداد استيراد Excel
+            document.getElementById('excelFile').addEventListener('change', handleExcelImport);
+            
+            // إضافة بيانات مثالبة إذا لم تكن موجودة
+            if (appData.employees.length === 0) {
+                addSampleData();
+            }
+        });
+
+        // ملء سنوات التقارير من 2025 إلى 2060 - الحل النهائي للمشكلة
+        function fillReportYears() {
+            const yearSelect = document.getElementById('reportYear');
+            if (!yearSelect) {
+                console.error('لم يتم العثور على عنصر reportYear');
+                return;
+            }
+            
+            yearSelect.innerHTML = '';
+            
+            for (let year = 2025; year <= 2060; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === new Date().getFullYear()) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+            
+            console.log('تم ملء سنوات التقارير بنجاح');
+        }
+
+        // تحميل البيانات من التخزين المحلي
+        function loadDataFromStorage() {
+            const savedData = localStorage.getItem('attendanceSystemData');
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    appData.employees = parsedData.employees || [];
+                    appData.attendance = parsedData.attendance || [];
+                    appData.users = parsedData.users || appData.users;
+                } catch (e) {
+                    console.error('خطأ في تحميل البيانات:', e);
+                }
+            }
+            
+            updateFilterOptions();
+            renderEmployeesTable();
+            renderUsersTable();
+        }
+
+        // حفظ البيانات في التخزين المحلي
+        function saveDataToStorage() {
+            const dataToSave = {
+                employees: appData.employees,
+                attendance: appData.attendance,
+                users: appData.users
+            };
+            localStorage.setItem('attendanceSystemData', JSON.stringify(dataToSave));
+        }
+
+        // تحديث خيارات الفلترة
+        function updateFilterOptions() {
+            const locations = [...new Set(appData.employees.map(emp => emp.location))];
+            const locationSelects = [
+                'locationFilter', 'attendanceLocation', 'qrLocation', 
+                'reportLocation', 'reportLocation2', 'allAttendanceLocation'
+            ];
+            
+            locationSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    // حفظ القيمة المحددة حالياً
+                    const currentValue = select.value;
+                    // إعادة تعيين الخيارات
+                    select.innerHTML = '<option value="">جميع المواقع</option>';
+                    
+                    locations.forEach(location => {
+                        if (location) {
+                            const option = document.createElement('option');
+                            option.value = location;
+                            option.textContent = location;
+                            if (location === currentValue) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        }
+                    });
+                }
+            });
+        }
+
+        // تسجيل الدخول
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            
+            const user = appData.users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                appData.currentUser = user;
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("app").style.display = "flex";
+                updateUserInfo();
+                updateDashboardStats();
+                
+                // إخفاء صفحة المستخدمين إذا كان المستخدم مشرف
+                if (user.role === "مشرف") {
+                    document.getElementById("usersMenuItem").style.display = "none";
+                } else {
+                    document.getElementById("usersMenuItem").style.display = "flex";
+                }
+                
+                // ملء سنوات التقارير مرة أخرى بعد تسجيل الدخول
+                fillReportYears();
+            } else {
+                alert("اسم المستخدم أو كلمة المرور غير صحيحة");
+            }
+        }
+
+        // تسجيل الخروج
+        function logout() {
+            appData.currentUser = null;
+            document.getElementById("app").style.display = "none";
+            document.getElementById("loginPage").style.display = "flex";
+        }
+
+        // تحديث معلومات المستخدم
+        function updateUserInfo() {
+            if (appData.currentUser) {
+                document.getElementById("userGreeting").textContent = `مرحباً، ${appData.currentUser.name}`;
+                document.getElementById("userRole").textContent = appData.currentUser.role;
+                document.getElementById("userAvatar").textContent = appData.currentUser.name.charAt(0);
+            }
+        }
+
+        // عرض الصفحة المحددة
+        function showPage(pageId) {
+            // التحقق من الصلاحيات
+            if (pageId === 'users' && appData.currentUser.role === 'مشرف') {
+                alert('غير مصرح لك بالدخول إلى هذه الصفحة');
+                return;
+            }
+            
+            // إخفاء جميع الصفحات
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // إزالة النشاط من جميع عناصر القائمة
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // إضافة النشاط للعنصر المحدد
+            event.currentTarget.classList.add('active');
+            
+            // عرض الصفحة المحددة
+            document.getElementById(pageId).classList.add('active');
+            
+            // تحديث عنوان الصفحة
+            const pageTitle = document.getElementById('pageTitle');
+            const titles = {
+                'dashboard': 'لوحة التحكم',
+                'employees': 'الموظفين',
+                'attendance': 'تسجيل الحضور',
+                'qrAttendance': 'QR Code',
+                'attendanceReport': 'إجمالي الحضور',
+                'reports': 'التقارير',
+                'users': 'المستخدمين'
+            };
+            pageTitle.textContent = titles[pageId] || 'لوحة التحكم';
+            
+            // تحديث البيانات إذا لزم الأمر
+            if (pageId === 'dashboard') {
+                updateDashboardStats();
+            } else if (pageId === 'employees') {
+                renderEmployeesTable();
+            } else if (pageId === 'attendance') {
+                renderAttendanceTable();
+            } else if (pageId === 'qrAttendance') {
+                generateAllQRCodes();
+            } else if (pageId === 'attendanceReport') {
+                renderAttendanceReportTable();
+            } else if (pageId === 'reports') {
+                // التأكد من ملء السنوات عند فتح صفحة التقارير
+                fillReportYears();
+                renderReportsTable();
+            } else if (pageId === 'users') {
+                renderUsersTable();
+            }
+        }
+
+        // تحديث إحصائيات لوحة التحكم
+        function updateDashboardStats() {
+            document.getElementById('totalEmployees').textContent = appData.employees.length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const presentToday = appData.attendance.filter(a => a.date === today).length;
+            document.getElementById('presentToday').textContent = presentToday;
+            document.getElementById('absentToday').textContent = Math.max(0, appData.employees.length - presentToday);
+            
+            const activeLocations = [...new Set(appData.employees.map(e => e.location))].length;
+            document.getElementById('activeLocations').textContent = activeLocations;
+            
+            // تحديث النشاطات الأخيرة
+            updateRecentActivities();
+        }
+
+        // تحديث النشاطات الأخيرة
+        function updateRecentActivities() {
+            const tbody = document.getElementById('recentActivitiesBody');
+            tbody.innerHTML = '';
+            
+            const recentAttendance = [...appData.attendance]
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
+            
+            recentAttendance.forEach(attendance => {
+                const row = document.createElement('tr');
+                const time = new Date(attendance.timestamp).toLocaleTimeString('ar-EG');
+                row.innerHTML = `
+                    <td>${attendance.employeeName}</td>
+                    <td>تسجيل حضور</td>
+                    <td>${time}</td>
+                    <td><span style="color: #2ecc71;">ناجح</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // عرض جدول الموظفين
+        function renderEmployeesTable() {
+            const tbody = document.getElementById('employeesTableBody');
+            tbody.innerHTML = '';
+            
+            const searchText = document.getElementById('employeeSearch').value.toLowerCase();
+            const locationFilter = document.getElementById('locationFilter').value;
+            
+            const filteredEmployees = appData.employees.filter(employee => {
+                const matchesSearch = employee.name.toLowerCase().includes(searchText) || 
+                                     employee.nationalId.includes(searchText);
+                const matchesLocation = !locationFilter || employee.location === locationFilter;
+                return matchesSearch && matchesLocation;
+            });
+            
+            filteredEmployees.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.name}</td>
+                    <td>${employee.nationalId}</td>
+                    <td>${employee.job}</td>
+                    <td>${employee.shift}</td>
+                    <td>${employee.location}</td>
+                    <td>${employee.company}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${employee.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="transferEmployee(${employee.id})" style="margin-right: 5px;">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="editEmployee(${employee.id})" style="margin-right: 5px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="showQRForEmployee(${employee.id})" style="margin-right: 5px;">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // تصفية الموظفين
+        function filterEmployees() {
+            renderEmployeesTable();
+        }
+
+        // حفظ الموظف
+        function saveEmployee() {
+            const employee = {
+                id: Date.now(),
+                name: document.getElementById('employeeName').value,
+                nationalId: document.getElementById('nationalId').value,
+                job: document.getElementById('employeeJob').value,
+                shift: document.getElementById('employeeShift').value,
+                location: document.getElementById('employeeLocation').value,
+                company: document.getElementById('employeeCompany').value
+            };
+            
+            // التحقق من عدم وجود رقم قومي مكرر
+            const existingEmployee = appData.employees.find(emp => emp.nationalId === employee.nationalId);
+            if (existingEmployee) {
+                alert('هذا الرقم القومي مسجل مسبقاً');
+                return;
+            }
+            
+            appData.employees.push(employee);
+            saveDataToStorage();
+            updateFilterOptions();
+            renderEmployeesTable();
+            closeModal('addEmployeeModal');
+            
+            // إظهار QR Code للموظف الجديد مباشرة
+            showQRForEmployee(employee.id);
+            
+            alert('تم إضافة الموظف بنجاح وتم إنشاء QR Code له');
+        }
+
+        // تعديل موظف
+        function editEmployee(id) {
+            const employee = appData.employees.find(emp => emp.id === id);
+            if (employee) {
+                appData.currentEditEmployeeId = id;
+                document.getElementById('editEmployeeName').value = employee.name;
+                document.getElementById('editNationalId').value = employee.nationalId;
+                document.getElementById('editEmployeeJob').value = employee.job;
+                document.getElementById('editEmployeeShift').value = employee.shift;
+                document.getElementById('editEmployeeLocation').value = employee.location;
+                document.getElementById('editEmployeeCompany').value = employee.company;
+                
+                document.getElementById('editEmployeeModal').style.display = 'flex';
+            }
+        }
+
+        // تحديث بيانات الموظف
+        function updateEmployee() {
+            const employee = appData.employees.find(emp => emp.id === appData.currentEditEmployeeId);
+            if (employee) {
+                employee.name = document.getElementById('editEmployeeName').value;
+                employee.job = document.getElementById('editEmployeeJob').value;
+                employee.shift = document.getElementById('editEmployeeShift').value;
+                employee.location = document.getElementById('editEmployeeLocation').value;
+                employee.company = document.getElementById('editEmployeeCompany').value;
+                
+                saveDataToStorage();
+                renderEmployeesTable();
+                closeModal('editEmployeeModal');
+                alert('تم تحديث بيانات الموظف بنجاح');
+            }
+        }
+
+        // حذف موظف
+        function deleteEmployee(id) {
+            if (confirm("هل تريد حذف الموظف نهائياً؟")) {
+                appData.employees = appData.employees.filter(emp => emp.id !== id);
+                saveDataToStorage();
+                renderEmployeesTable();
+                updateDashboardStats();
+                alert("تم حذف الموظف بنجاح");
+            }
+        }
+
+        // نقل موظف
+        function transferEmployee(id) {
+            const employee = appData.employees.find(emp => emp.id === id);
+            if (employee) {
+                const newCompany = prompt(`نقل الموظف ${employee.name} إلى شركة:`, employee.company);
+                if (newCompany) {
+                    employee.company = newCompany;
+                    saveDataToStorage();
+                    renderEmployeesTable();
+                    alert("تم نقل الموظف بنجاح");
+                }
+            }
+        }
+
+        // إظهار QR Code لموظف محدد
+        function showQRForEmployee(employeeId) {
+            const employee = appData.employees.find(emp => emp.id === employeeId);
+            if (employee) {
+                // الانتقال لصفحة QR Code
+                document.querySelector('.menu-item.active').classList.remove('active');
+                document.querySelector('.page.active').classList.remove('active');
+                
+                document.querySelector('.menu-item[onclick="showPage(\'qrAttendance\')"]').classList.add('active');
+                document.getElementById('qrAttendance').classList.add('active');
+                document.getElementById('pageTitle').textContent = 'QR Code';
+                
+                // إنشاء QR Code للموظف المحدد فقط
+                const container = document.getElementById('qrContainer');
+                container.innerHTML = '';
+                
+                const qrCard = document.createElement('div');
+                qrCard.className = 'qr-card';
+                
+                const qr = qrcode(0, 'M');
+                qr.addData(JSON.stringify({
+                    employeeId: employee.id,
+                    name: employee.name,
+                    nationalId: employee.nationalId,
+                    location: employee.location
+                }));
+                qr.make();
+                
+                qrCard.innerHTML = `
+                    <div class="qr-code">${qr.createImgTag(4)}</div>
+                    <div class="qr-name">${employee.name}</div>
+                    <div style="font-size: 12px; color: #777;">${employee.nationalId}</div>
+                    <div style="font-size: 12px; color: #777;">${employee.location}</div>
+                `;
+                
+                container.appendChild(qrCard);
+            }
+        }
+
+        // إنشاء جميع QR Codes
+        function generateAllQRCodes() {
+            const container = document.getElementById('qrContainer');
+            container.innerHTML = '';
+            
+            const searchText = document.getElementById('qrSearch').value.toLowerCase();
+            const locationFilter = document.getElementById('qrLocation').value;
+            
+            const filteredEmployees = appData.employees.filter(employee => {
+                const matchesSearch = employee.name.toLowerCase().includes(searchText);
+                const matchesLocation = !locationFilter || employee.location === locationFilter;
+                return matchesSearch && matchesLocation;
+            });
+            
+            filteredEmployees.forEach(employee => {
+                const qrCard = document.createElement('div');
+                qrCard.className = 'qr-card';
+                
+                const qr = qrcode(0, 'M');
+                qr.addData(JSON.stringify({
+                    employeeId: employee.id,
+                    name: employee.name,
+                    nationalId: employee.nationalId,
+                    location: employee.location
+                }));
+                qr.make();
+                
+                qrCard.innerHTML = `
+                    <div class="qr-code">${qr.createImgTag(4)}</div>
+                    <div class="qr-name">${employee.name}</div>
+                    <div style="font-size: 12px; color: #777;">${employee.nationalId}</div>
+                    <div style="font-size: 12px; color: #777;">${employee.location}</div>
+                `;
+                
+                container.appendChild(qrCard);
+            });
+        }
+
+        // تصفية QR Codes
+        function filterQRCodes() {
+            generateAllQRCodes();
+        }
+
+        // طباعة QR Codes
+        function printQRCodes() {
+            window.print();
+        }
+
+        // عرض جدول الحضور
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            const cardsView = document.getElementById('cardsView');
+            
+            tbody.innerHTML = '';
+            cardsView.innerHTML = '';
+            
+            const locationFilter = document.getElementById('attendanceLocation').value;
+            const filteredEmployees = locationFilter ? 
+                appData.employees.filter(emp => emp.location === locationFilter) : 
+                appData.employees;
+            
+            const today = document.getElementById('attendanceDate').value;
+            const todayAttendance = appData.attendance.filter(a => a.date === today);
+            
+            filteredEmployees.forEach(employee => {
+                const isPresent = todayAttendance.some(a => a.employeeId === employee.id);
+                
+                // عرض الجدول
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.name}</td>
+                    <td>${employee.nationalId}</td>
+                    <td>${employee.job}</td>
+                    <td>${employee.location}</td>
+                    <td>
+                        ${isPresent ? 
+                            '<button class="btn btn-light btn-sm" disabled>تم التسجيل</button>' :
+                            `<button class="btn btn-success btn-sm" onclick="recordAttendance(${employee.id}, '${employee.name}', '${employee.location}')">تسجيل حضور</button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+                
+                // عرض البطاقات
+                const card = document.createElement('div');
+                card.className = 'employee-card';
+                card.innerHTML = `
+                    <div class="employee-name">${employee.name}</div>
+                    <div class="employee-info">${employee.job}</div>
+                    <div class="employee-info">${employee.location}</div>
+                    <div class="employee-info">${employee.nationalId}</div>
+                    <div style="margin-top: 15px;">
+                        ${isPresent ? 
+                            '<button class="btn btn-light btn-sm" disabled>تم التسجيل</button>' :
+                            `<button class="btn btn-success btn-sm" onclick="recordAttendance(${employee.id}, '${employee.name}', '${employee.location}')">تسجيل حضور</button>`
+                        }
+                    </div>
+                `;
+                cardsView.appendChild(card);
+            });
+        }
+
+        // تغيير طريقة عرض الحضور
+        function changeAttendanceView() {
+            const viewMode = document.getElementById('viewMode').value;
+            if (viewMode === 'table') {
+                document.getElementById('tableView').style.display = 'block';
+                document.getElementById('cardsView').style.display = 'none';
+            } else {
+                document.getElementById('tableView').style.display = 'none';
+                document.getElementById('cardsView').style.display = 'grid';
+            }
+        }
+
+        // تصفية موظفين الحضور
+        function filterAttendanceEmployees() {
+            renderAttendanceTable();
+        }
+
+        // تسجيل حضور
+        function recordAttendance(employeeId, employeeName, location) {
+            const today = document.getElementById('attendanceDate').value;
+            
+            // التحقق من الحضور المكرر
+            const existingAttendance = appData.attendance.find(a => 
+                a.employeeId === employeeId && a.date === today
+            );
+            
+            if (existingAttendance) {
+                document.getElementById("alertMessage").textContent = `${employeeName}: تم تسجيل حضوره من قبل`;
+                document.getElementById("duplicateAlert").style.display = "flex";
+                appData.currentAttendance = { employeeId, employeeName, location };
+            } else {
+                saveAttendance(employeeId, employeeName, location, today);
+            }
+        }
+
+        // حفظ الحضور
+        function saveAttendance(employeeId, employeeName, location, date) {
+            appData.attendance.push({
+                employeeId,
+                employeeName,
+                location,
+                date,
+                timestamp: new Date().toISOString()
+            });
+            
+            saveDataToStorage();
+            renderAttendanceTable();
+            updateDashboardStats();
+            alert(`تم تسجيل حضور ${employeeName} بنجاح`);
+        }
+
+        // تأكيد الحضور مع التكرار
+        function confirmAttendance() {
+            const { employeeId, employeeName, location } = appData.currentAttendance;
+            const today = document.getElementById('attendanceDate').value;
+            
+            // حذف السجل القديم
+            appData.attendance = appData.attendance.filter(a => 
+                !(a.employeeId === employeeId && a.date === today)
+            );
+            
+            saveAttendance(employeeId, employeeName, location, today);
+            document.getElementById("duplicateAlert").style.display = "none";
+        }
+
+        function cancelAttendance() {
+            document.getElementById("duplicateAlert").style.display = "none";
+        }
+
+        // عرض جميع سجلات الحضور
+        function showAllAttendance() {
+            renderAllAttendanceTable();
+            document.getElementById('allAttendanceModal').style.display = 'flex';
+        }
+
+        // عرض جدول جميع سجلات الحضور
+        function renderAllAttendanceTable() {
+            const tbody = document.getElementById('allAttendanceTableBody');
+            tbody.innerHTML = '';
+            
+            const fromDate = document.getElementById('allAttendanceFromDate').value;
+            const toDate = document.getElementById('allAttendanceToDate').value;
+            const locationFilter = document.getElementById('allAttendanceLocation').value;
+            
+            const filteredAttendance = appData.attendance.filter(a => {
+                const inDateRange = a.date >= fromDate && a.date <= toDate;
+                const inLocation = !locationFilter || a.location === locationFilter;
+                return inDateRange && inLocation;
+            }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            filteredAttendance.forEach(attendance => {
+                const row = document.createElement('tr');
+                const time = new Date(attendance.timestamp).toLocaleTimeString('ar-EG');
+                row.innerHTML = `
+                    <td>${attendance.employeeName}</td>
+                    <td>${attendance.location}</td>
+                    <td>${attendance.date}</td>
+                    <td>${time}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAttendanceRecord('${attendance.timestamp}')">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // تصفية جميع سجلات الحضور
+        function filterAllAttendance() {
+            renderAllAttendanceTable();
+        }
+
+        // حذف سجل حضور
+        function deleteAttendanceRecord(timestamp) {
+            if (confirm('هل تريد حذف سجل الحضور هذا؟')) {
+                appData.attendance = appData.attendance.filter(a => a.timestamp !== timestamp);
+                saveDataToStorage();
+                renderAllAttendanceTable();
+                renderAttendanceTable();
+                updateDashboardStats();
+                alert('تم حذف سجل الحضور بنجاح');
+            }
+        }
+
+        // عرض جدول إجمالي الحضور
+        function renderAttendanceReportTable() {
+            const tbody = document.getElementById('attendanceReportTableBody');
+            tbody.innerHTML = '';
+            
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const locationFilter = document.getElementById('reportLocation').value;
+            
+            if (!fromDate || !toDate) {
+                return;
+            }
+            
+            const filteredAttendance = appData.attendance.filter(a => {
+                const inDateRange = a.date >= fromDate && a.date <= toDate;
+                const inLocation = !locationFilter || a.location === locationFilter;
+                return inDateRange && inLocation;
+            });
+            
+            // تجميع البيانات حسب الموظف
+            const employeeReports = {};
+            
+            appData.employees.forEach(employee => {
+                const employeeAttendance = filteredAttendance.filter(a => a.employeeId === employee.id);
+                const totalDays = Math.ceil((new Date(toDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1;
+                const presentDays = employeeAttendance.length;
+                const absentDays = totalDays - presentDays;
+                const attendanceRate = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
+                
+                employeeReports[employee.id] = {
+                    name: employee.name,
+                    nationalId: employee.nationalId,
+                    totalDays,
+                    presentDays,
+                    absentDays,
+                    attendanceRate: `${attendanceRate}%`
+                };
+            });
+            
+            // عرض البيانات
+            Object.values(employeeReports).forEach(report => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${report.name}</td>
+                    <td>${report.nationalId}</td>
+                    <td>${report.totalDays}</td>
+                    <td>${report.presentDays}</td>
+                    <td>${report.absentDays}</td>
+                    <td>${report.attendanceRate}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // تصفية تقارير الحضور
+        function filterAttendanceReport() {
+            renderAttendanceReportTable();
+        }
+
+        // عرض جدول التقارير
+        function renderReportsTable() {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+            
+            const year = parseInt(document.getElementById('reportYear').value);
+            const month = parseInt(document.getElementById('reportMonth').value);
+            const locationFilter = document.getElementById('reportLocation2').value;
+            
+            if (!year) return;
+            
+            const reports = appData.employees.map(employee => {
+                let startDate, endDate;
+                
+                if (month === 0) {
+                    // جميع أشهر السنة
+                    startDate = `${year}-01-01`;
+                    endDate = `${year}-12-31`;
+                } else {
+                    // شهر محدد
+                    startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+                    const lastDay = new Date(year, month, 0).getDate();
+                    endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
+                }
+                
+                const employeeAttendance = appData.attendance.filter(a => 
+                    a.employeeId === employee.id && 
+                    a.date >= startDate && 
+                    a.date <= endDate &&
+                    (!locationFilter || a.location === locationFilter)
+                );
+                
+                const totalDays = month === 0 ? 365 : new Date(year, month, 0).getDate();
+                const presentDays = employeeAttendance.length;
+                const daysInLocations = {};
+                
+                employeeAttendance.forEach(a => {
+                    daysInLocations[a.location] = (daysInLocations[a.location] || 0) + 1;
+                });
+                
+                const details = Object.entries(daysInLocations)
+                    .map(([loc, days]) => `${days} يوم في ${loc}`)
+                    .join('، ');
+                
+                let status = 'طبيعي';
+                if (presentDays > totalDays) {
+                    status = 'مشكلة: عدد الأيام أكثر من أيام الشهر';
+                } else if (presentDays === totalDays) {
+                    status = 'ممتاز: حضور كامل';
+                } else if (presentDays < totalDays * 0.7) {
+                    status = 'تحذير: نسبة حضور منخفضة';
+                }
+                
+                return {
+                    name: employee.name,
+                    totalDays: presentDays,
+                    details: details || 'لا توجد أيام حضور',
+                    status
+                };
+            });
+            
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${report.name}</td>
+                    <td>${report.totalDays} يوم</td>
+                    <td>${report.details}</td>
+                    <td><span style="color: ${report.status.includes('طبيعي') ? '#2ecc71' : report.status.includes('مشكلة') ? '#e74c3c' : report.status.includes('ممتاز') ? '#3498db' : '#f39c12'};">${report.status}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // تصفية التقارير
+        function filterReports() {
+            renderReportsTable();
+        }
+
+        // عرض جدول المستخدمين
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            appData.users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.name}</td>
+                    <td>${user.role}</td>
+                    <td>${user.created}</td>
+                    <td><span style="color: #2ecc71;">نشط</span></td>
+                    <td>
+                        ${appData.currentUser.role === 'مسئول' && user.username !== 'admin' ? 
+                            `<button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="editUserModal('${user.username}')" style="margin-right: 5px;">
+                                <i class="fas fa-edit"></i>
+                            </button>` :
+                            `<button class="btn btn-light btn-sm" disabled>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-light btn-sm" disabled style="margin-right: 5px;">
+                                <i class="fas fa-edit"></i>
+                            </button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // حفظ المستخدم
+        function saveUser() {
+            if (appData.currentUser.role !== 'مسئول') {
+                alert('غير مصرح لك بهذا الإجراء');
+                return;
+            }
+            
+            const user = {
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                name: document.getElementById('newName').value,
+                role: document.getElementById('newRole').value,
+                created: new Date().toISOString().split('T')[0]
+            };
+            
+            const existingUser = appData.users.find(u => u.username === user.username);
+            if (existingUser) {
+                alert('اسم المستخدم هذا مسجل مسبقاً');
+                return;
+            }
+            
+            appData.users.push(user);
+            saveDataToStorage();
+            renderUsersTable();
+            closeModal('addUserModal');
+            alert('تم إضافة المستخدم بنجاح');
+        }
+
+        // فتح نموذج تعديل المستخدم
+        function editUserModal(username) {
+            const user = appData.users.find(u => u.username === username);
+            if (user) {
+                appData.currentEditUsername = username;
+                document.getElementById('editUsername').value = user.username;
+                document.getElementById('editPassword').value = user.password;
+                document.getElementById('editName').value = user.name;
+                document.getElementById('editRole').value = user.role;
+                
+                document.getElementById('editUserModal').style.display = 'flex';
+            }
+        }
+
+        // تحديث المستخدم
+        function updateUser() {
+            const user = appData.users.find(u => u.username === appData.currentEditUsername);
+            if (user) {
+                user.password = document.getElementById('editPassword').value;
+                user.name = document.getElementById('editName').value;
+                user.role = document.getElementById('editRole').value;
+                
+                saveDataToStorage();
+                renderUsersTable();
+                closeModal('editUserModal');
+                alert('تم تحديث بيانات المستخدم بنجاح');
+            }
+        }
+
+        // حذف مستخدم
+        function deleteUser(username) {
+            if (appData.currentUser.role !== 'مسئول') {
+                alert('غير مصرح لك بهذا الإجراء');
+                return;
+            }
+            
+            if (username === 'admin') {
+                alert('لا يمكن حذف المستخدم الرئيسي');
+                return;
+            }
+            
+            if (confirm("هل تريد حذف المستخدم نهائياً؟")) {
+                appData.users = appData.users.filter(u => u.username !== username);
+                saveDataToStorage();
+                renderUsersTable();
+                alert("تم حذف المستخدم بنجاح");
+            }
+        }
+
+        // استيراد من Excel
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        alert('الملف لا يحتوي على بيانات');
+                        return;
+                    }
+                    
+                    const importedEmployees = jsonData.map((row, index) => ({
+                        id: Date.now() + index,
+                        name: String(row['الاسم'] || row['name'] || ''),
+                        nationalId: String(row['الرقم القومي'] || row['nationalId'] || ''),
+                        job: String(row['المهنة'] || row['job'] || ''),
+                        shift: String(row['الشفت'] || row['shift'] || 'صباحي'),
+                        location: String(row['الموقع'] || row['location'] || ''),
+                        company: String(row['الشركة'] || row['company'] || '')
+                    })).filter(emp => emp.nationalId && emp.name);
+                    
+                    if (importedEmployees.length === 0) {
+                        alert('لم يتم العثور على بيانات صالحة في الملف');
+                        return;
+                    }
+                    
+                    appData.employees = [...appData.employees, ...importedEmployees];
+                    saveDataToStorage();
+                    updateFilterOptions();
+                    renderEmployeesTable();
+                    updateDashboardStats();
+                    
+                    alert(`تم استيراد ${importedEmployees.length} موظف بنجاح`);
+                    
+                } catch (error) {
+                    alert('حدث خطأ في قراءة الملف: ' + error.message);
+                }
+                
+                event.target.value = '';
+            };
+            reader.onerror = function() {
+                alert('حدث خطأ في قراءة الملف');
+                event.target.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // دوال التصدير إلى Excel
+        function exportEmployeesToExcel() {
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(appData.employees.map(emp => ({
+                    'الاسم': emp.name,
+                    'الرقم القومي': emp.nationalId,
+                    'المهنة': emp.job,
+                    'الشفت': emp.shift,
+                    'الموقع': emp.location,
+                    'الشركة': emp.company
+                })));
+                
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'الموظفين');
+                XLSX.writeFile(workbook, 'الموظفين.xlsx');
+                alert('تم تصدير بيانات الموظفين بنجاح');
+            } catch (error) {
+                alert('حدث خطأ في التصدير: ' + error.message);
+            }
+        }
+
+        function exportAttendanceToExcel() {
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(appData.attendance.map(a => ({
+                    'الاسم': a.employeeName,
+                    'الموقع': a.location,
+                    'التاريخ': a.date,
+                    'الوقت': new Date(a.timestamp).toLocaleTimeString()
+                })));
+                
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'الحضور');
+                XLSX.writeFile(workbook, 'سجل_الحضور.xlsx');
+                alert('تم تصدير بيانات الحضور بنجاح');
+            } catch (error) {
+                alert('حدث خطأ في التصدير: ' + error.message);
+            }
+        }
+
+        function exportAttendanceReportToExcel() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            
+            if (!fromDate || !toDate) {
+                alert('يرجى تحديد تاريخ البداية والنهاية');
+                return;
+            }
+            
+            try {
+                const reportData = [];
+                const locationFilter = document.getElementById('reportLocation').value;
+                const filteredAttendance = appData.attendance.filter(a => {
+                    const inDateRange = a.date >= fromDate && a.date <= toDate;
+                    const inLocation = !locationFilter || a.location === locationFilter;
+                    return inDateRange && inLocation;
+                });
+                
+                appData.employees.forEach(employee => {
+                    const employeeAttendance = filteredAttendance.filter(a => a.employeeId === employee.id);
+                    const totalDays = Math.ceil((new Date(toDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    const presentDays = employeeAttendance.length;
+                    const absentDays = totalDays - presentDays;
+                    const attendanceRate = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
+                    
+                    reportData.push({
+                        'الاسم': employee.name,
+                        'الرقم القومي': employee.nationalId,
+                        'إجمالي أيام العمل': totalDays,
+                        'أيام الحضور': presentDays,
+                        'أيام الغياب': absentDays,
+                        'نسبة الحضور': `${attendanceRate}%`
+                    });
+                });
+                
+                const worksheet = XLSX.utils.json_to_sheet(reportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'تقرير الحضور');
+                XLSX.writeFile(workbook, `تقرير_الحضور_${fromDate}_إلى_${toDate}.xlsx`);
+                alert('تم تصدير تقرير الحضور بنجاح');
+            } catch (error) {
+                alert('حدث خطأ في التصدير: ' + error.message);
+            }
+        }
+
+        function exportReportsToExcel() {
+            try {
+                const year = parseInt(document.getElementById('reportYear').value);
+                const month = parseInt(document.getElementById('reportMonth').value);
+                const locationFilter = document.getElementById('reportLocation2').value;
+                
+                const reportData = appData.employees.map(employee => {
+                    let startDate, endDate;
+                    
+                    if (month === 0) {
+                        startDate = `${year}-01-01`;
+                        endDate = `${year}-12-31`;
+                    } else {
+                        startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+                        const lastDay = new Date(year, month, 0).getDate();
+                        endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
+                    }
+                    
+                    const employeeAttendance = appData.attendance.filter(a => 
+                        a.employeeId === employee.id && 
+                        a.date >= startDate && 
+                        a.date <= endDate &&
+                        (!locationFilter || a.location === locationFilter)
+                    );
+                    
+                    const totalDays = month === 0 ? 365 : new Date(year, month, 0).getDate();
+                    const presentDays = employeeAttendance.length;
+                    const daysInLocations = {};
+                    
+                    employeeAttendance.forEach(a => {
+                        daysInLocations[a.location] = (daysInLocations[a.location] || 0) + 1;
+                    });
+                    
+                    const details = Object.entries(daysInLocations)
+                        .map(([loc, days]) => `${days} يوم في ${loc}`)
+                        .join('، ');
+                    
+                    let status = 'طبيعي';
+                    if (presentDays > totalDays) {
+                        status = 'مشكلة: عدد الأيام أكثر من أيام الشهر';
+                    } else if (presentDays === totalDays) {
+                        status = 'ممتاز: حضور كامل';
+                    } else if (presentDays < totalDays * 0.7) {
+                        status = 'تحذير: نسبة حضور منخفضة';
+                    }
+                    
+                    return {
+                        'الاسم': employee.name,
+                        'إجمالي أيام العمل': presentDays,
+                        'تفاصيل الحضور': details || 'لا توجد أيام حضور',
+                        'الحالة': status
+                    };
+                });
+                
+                const worksheet = XLSX.utils.json_to_sheet(reportData);
+                const workbook = XLSX.utils.book_new();
+                const sheetName = month === 0 ? `تقرير_${year}` : `تقرير_${year}_${month}`;
+                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                XLSX.writeFile(workbook, `${sheetName}.xlsx`);
+                alert('تم تصدير التقرير بنجاح');
+            } catch (error) {
+                alert('حدث خطأ في التصدير: ' + error.message);
+            }
+        }
+
+        // إضافة بيانات مثالبة
+        function addSampleData() {
+            appData.employees = [
+                {
+                    id: 1,
+                    name: 'أحمد محمد أحمد',
+                    nationalId: '29805150101234',
+                    job: 'عامل بناء',
+                    shift: 'صباحي',
+                    location: 'الموقع أ',
+                    company: 'شركة أ'
+                },
+                {
+                    id: 2,
+                    name: 'محمود عبدالله سعيد',
+                    nationalId: '29907150101235',
+                    job: 'نجار',
+                    shift: 'مسائي',
+                    location: 'الموقع ب',
+                    company: 'شركة ب'
+                },
+                {
+                    id: 3,
+                    name: 'سامح علي محمود',
+                    nationalId: '30008150101236',
+                    job: 'سباك',
+                    shift: 'صباحي',
+                    location: 'الموقع أ',
+                    company: 'شركة أ'
+                }
+            ];
+            
+            // إضافة بعض سجلات الحضور المثالبة
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            appData.attendance = [
+                {
+                    employeeId: 1,
+                    employeeName: 'أحمد محمد أحمد',
+                    location: 'الموقع أ',
+                    date: today,
+                    timestamp: new Date().toISOString()
+                },
+                {
+                    employeeId: 1,
+                    employeeName: 'أحمد محمد أحمد',
+                    location: 'الموقع أ',
+                    date: yesterdayStr,
+                    timestamp: new Date(yesterday).toISOString()
+                },
+                {
+                    employeeId: 2,
+                    employeeName: 'محمود عبدالله سعيد',
+                    location: 'الموقع ب',
+                    date: today,
+                    timestamp: new Date().toISOString()
+                }
+            ];
+            
+            saveDataToStorage();
+            updateFilterOptions();
+        }
+
+        // دوال المساعدة
+        function showAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').style.display = 'flex';
+        }
+
+        function showAddUserModal() {
+            if (appData.currentUser.role !== 'مسئول') {
+                alert('غير مصرح لك بالدخول إلى هذه الصفحة');
+                return;
+            }
+            document.getElementById('addUserModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+    </script>
+</body>
+</html>
